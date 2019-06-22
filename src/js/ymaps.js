@@ -41,7 +41,9 @@ function mapInit() {
                             // Получаем путь до топонима, если метод вернул null, запрашиваем наименование здания.
                             firstGeoObject.getThoroughfare() || firstGeoObject.getPremise()
                         ].filter(Boolean).join(', '),
-                        // В качестве контента балуна задаем строку с адресом объекта.
+                        // В качестве контента балуна задаем строку с адресом объекта и делаем форму для комментариев.
+                        //Я понимаю, что это выглядит нелепо, но в вёрстке я ни в зуб ногой. Я понимаю, что теги можно вынести,
+                        //например, в гео-контент. Но пока хочу узнать в правильном ли направлении иду?
                         balloonContentHeader: firstGeoObject.getAddressLine(),
                         balloonContentBody: '<div class="feedbacks"></div>',
                         balloonContentFooter:'<div class="add-feedback">Ваш отзыв:</div>'+
