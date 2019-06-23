@@ -1,7 +1,12 @@
 function mapInit() {
   
     ymaps.ready(() => {
-        console.log("111");
+        var clustererLayout = ymaps.templateLayoutFactory.createClass(
+            // Флаг "raw" означает, что данные вставляют "как есть" без экранирования html.
+            '<h2 class=ballon_header>{{ properties.balloonContentHeader|raw }}</h2>' +
+                '<div class=ballon_body>{{ properties.balloonContentBody|raw }}</div>' +
+                '<div class=ballon_footer>{{ properties.balloonContentFooter|raw }}</div>'
+        );
 
         var placemark,
             map = new ymaps.Map("map", {
@@ -12,53 +17,48 @@ function mapInit() {
         }, {
             baloonMaxWidth: 200
         });
+    
+        var clusterer = new ymaps.Clusterer({
+            clusterDisableClickZoom: true,
+            // Устанавливаем стандартный макет балуна кластера "Карусель".
+            clusterBalloonContentLayout: 'cluster#balloonCarousel',
+            // Устанавливаем собственный макет.
+            clusterBalloonItemContentLayout: clustererLayout
+        });
 
         map.events.add('click', function (e) {
             var coords = e.get('coords');
-            placemark = createPlacemark(coords);
-            map.geoObjects.add(placemark);
-            getAddress(coords);
+            var geoCoords = ymaps.geocode(coords);
+            // var adress = geoCoords.geoObjects.get(0).properties.get('text');
+            document.querySelector('.bg-modal').style.display = 'flex';
+            createPlacemark(coords);
         });
+        
+        document.querySelector('.close').addEventListener('click',function() {
+            document.querySelector('.bg-modal').style.display = 'none'});
+
+        
+
+        const button = document.querySelector('button');
+        button.addEventListener('click', (e) => {
+            e.preventDefault()});
 
         function createPlacemark(coords) {
-            return new ymaps.Placemark(coords, {}, {
-                preset: 'islands#redIcon'
-            });
-        }
+            const name = document.querySelector('name').value;
+            const point = document.querySelector('point').value;
+            const message = document.querySelector('message').value;
 
-        // Определяем адрес по координатам (обратное геокодирование).
-        function getAddress(coords) {
-            placemark.properties.set('iconCaption', 'поиск...');
-            ymaps.geocode(coords).then(function (res) {
-                var firstGeoObject = res.geoObjects.get(0);
-
-                placemark.properties
-                    .set({
-                        // Формируем строку с данными об объекте.
-                        iconCaption: [
-                            // Название населенного пункта или вышестоящее административно-территориальное образование.
-                            firstGeoObject.getLocalities().length ? firstGeoObject.getLocalities() : firstGeoObject.getAdministrativeAreas(),
-                            // Получаем путь до топонима, если метод вернул null, запрашиваем наименование здания.
-                            firstGeoObject.getThoroughfare() || firstGeoObject.getPremise()
-                        ].filter(Boolean).join(', '),
-                        // В качестве контента балуна задаем строку с адресом объекта и делаем форму для комментариев.
-                        //Я понимаю, что это выглядит нелепо, но в вёрстке я ни в зуб ногой. Я понимаю, что теги можно вынести,
-                        //например, в гео-контент. Но пока хочу узнать в правильном ли направлении иду?
-                        balloonContentHeader: firstGeoObject.getAddressLine(),
-                        balloonContentBody: '<div class="feedbacks"></div>',
-                        balloonContentFooter:'<div class="add-feedback">Ваш отзыв:</div>'+
-                        '<br><input type="text" class="add-name-input" placeholder="Ваше имя">'+
-                        '<br><input type="text" class="add-place-input" placeholder="Укажите место">'+
-                        '<br><input type="text" class="add-feedback-input" placeholder="Поделитесь впечатлениями">'+
-                        '<br><button class="add-button">Добавить</button>'+
-                        '<style type="text/css"> .add-feedback-input {margin:10px 0; height:72px;'+
-                        'width:20em; border-radius: 25px; border:1px solid #a9a9a9; padding:0 15px;}'+
-                        'input {margin:10px 0;'+
-                        'width:20em; border-radius: 25px; border:1px solid #a9a9a9; padding:0 15px;}'+
-                        '</sryle>'
-                    });
-            });
-            
+            if (name === '') {
+              alert('Как тебя зовут?');
+            } else if (point === '') {
+              alert('Откуда ты?');
+            } else if (message === '') {
+              alert('Неужели ты ничего не расскажешь?');
+            } else {
+                return new ymaps.Placemark(coords, {}, {
+                    preset: 'islands#redIcon'
+                });
+            }
         }
     })
 }
