@@ -28,6 +28,12 @@
     max-height: 20px;
 }
 
+.comment {
+    width: 400px;
+    height: 200px;
+    padding: 20px;
+}
+
 .modal_input {
     width: 50%;
     display: block;
