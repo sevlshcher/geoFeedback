@@ -1,6 +1,8 @@
 import render from "../templates/modal.hbs"
 import {getData} from './data'
 
+var modal = document.querySelector('.modal');
+
 function mapInit() {
   
     ymaps.ready(() => {
@@ -35,7 +37,7 @@ function mapInit() {
                 var obj = {};
                 obj.coords = coords;
                 obj.address = res.geoObjects.get(0).properties.get('text');
-                obj.comments = [];
+                obj.comments = {};
 
                 openPopup (obj, map, position, clusterer);
             });
@@ -44,44 +46,34 @@ function mapInit() {
 }
 
     function openPopup (obj, map, position, clusterer) {
+        modal.innerHTML = render();
+        //let openModal = document.querySelector('.bg-modal');
+        let closeModal = document.querySelector('.close');
         const header = document.querySelector('.modal_header');
         header.innerHTML = obj.address;
-        const comment = document.querySelector('.comment');
-        comment.innerHTML = render(obj.comments);
         document.addEventListener('click', function (e) {
-            e.preventDefault();
-            let openModal = document.querySelector('.bg-modal');
-            let closeModal = document.querySelector('.close');
+            modal.style.display = 'flex';
             if(e.target === closeModal) {
-                openModal.style.display = 'none';
-            } else {
-                openModal.style.display = 'flex';
-                openModal.innerHTML = render();
-                createComment();
+                modal.style.display = 'none';
             }
         });
-        
+        createComment();
     }
 
         // document.querySelector('.close').addEventListener('click',function() {
         //     document.querySelector('.bg-modal').style.display = 'none'});
 
-        function createComment() {
+        function createComment(obj) {
+            const comment = document.querySelector('.comment');
             const button = document.querySelector('.button');
             const name = document.querySelector('#name');
             const point = document.querySelector('#point');
             const message = document.querySelector('#message');
             const date = getData();
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (name === '') {
-                    alert('Как тебя зовут?');
-                } else if (point === '') {
-                    alert('Откуда ты?');
-                } else if (message === '') {
-                    alert('Неужели ты ничего не расскажешь?');
+            button.addEventListener('click', () => {
+                if (name === '' || point === '' || message === '') {
+                    alert('Незаполненное поле формы');
                 } else {
-                    event.fire('userclose');
                     let sms = {};
                     sms.time = date;
                     sms.name = name.value;
