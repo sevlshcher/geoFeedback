@@ -57,7 +57,7 @@ function mapInit() {
                 modal.style.display = 'none';
             }
         });
-        createComment();
+        createComment(obj);
     }
 
         // document.querySelector('.close').addEventListener('click',function() {
@@ -79,17 +79,19 @@ function mapInit() {
                     sms.name = name.value;
                     sms.point = point.value;
                     sms.message = message.value;
-                    obj.comments.push(sms);
-                    createPlacemark();
+                    obj.comments.sms = sms;
+                    console.log(obj.comments.sms.point);
+                    console.log(obj.comments.sms);
+                    createPlacemark(obj);
                 }
             });
         }
 
-        function createPlacemark(coords) {
+        function createPlacemark(obj, coords) {
             let placemark = new ymaps.Placemark(obj.coords, {
-                balloonContentHeader: obj.comments.point,
-                balloonContenBody: [obj.commments[obj.comments.length - 1].name, obj.commments[obj.comments.length - 1].message],
-                balloonContenFooter: obj.commments[obj.comments.length - 1].time
+                balloonContentHeader: obj.comments.sms.point,
+                balloonContenBody: (obj.commments.sms.name, obj.commments.sms.message),
+                balloonContenFooter: obj.commments.sms.time
             }, {
                 preset: 'islands#redIcon'
             });
