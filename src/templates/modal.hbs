@@ -1,12 +1,17 @@
-<div class="bg-modal">
-    <div class="modal_header"></div>
+<header class="header">
+    <div class="header__address">
+        <img src="./src/images/icon.png" alt="" class="header__address-image">
+        <div class="modal__header"></div>
+    </div>
     <div class="close">+</div>
-    <img src="./location.png" alt="">
+</header>
+<ul class="feedbacks"></ul>
+<div class="modal__content">
+    <div class="comment">Ваш отзыв</div>
+    <input id="name" class="form__input form__name" type="text" placeholder="Ваше имя"><br>
+    <input  id="point" class="form__input form__place" type="text" placeholder="Укажите место"><br>
+    <textarea id="message" class="form__input form__text" placeholder="Поделитесь впечатлениями"></textarea><br>
 </div>
-<div class="modal-content">
-    <div class="comment"></div>
-    <input id="name" class="modal_input" type="text" placeholder="Ваше имя"><br>
-    <input  id="point" class="modal_input" type="text" placeholder="Укажите место"><br>
-    <textarea id="message" class="modal_textarea" placeholder="Поделитесь впечатлениями"></textarea><br>
-    <button class="button">Добавить</button>
-</div>
+<footer class="footer">
+        <button class="button">Добавить</button>
+</footer>

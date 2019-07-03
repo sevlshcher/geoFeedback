@@ -1,4 +1,5 @@
 import render from "../templates/modal.hbs"
+import render2 from "../templates/feedbacks.hbs"
 import {getData} from './data'
 
 var modal = document.querySelector('.modal');
@@ -9,25 +10,14 @@ function mapInit() {
         var map = new ymaps.Map("map", {
             center: [59.94, 30.30], // Saint-Petersburg
             zoom: 8,
-            controls: ['zoomControl'],
-            behavior: ['drag']
+            controls: ['zoomControl']
         }, {});
-
-        var clustererLayout = ymaps.templateLayoutFactory.createClass(
-            '<h2 class=ballon_header>{{ properties.balloonContentHeader}}</h2>' +
-            '<div class=ballon_body>{{ properties.balloonContentBody}}</div>' +
-            '<div class=ballon_footer>{{ properties.balloonContentFooter}}</div>'
-        );
 
         var clusterer = new ymaps.Clusterer({
             clusterDisableClickZoom: true,
-            clusterOpenBalloonOnClick: true,
+            openBalloonOnClick: true,
             clusterBalloonContentLayout: 'cluster#balloonCarousel',
-            clusterBalloonPanelMaxMapArea: 0,
-            clusterBalloonContentLayoutWidth: 300,
-            clusterBalloonContentLayoutHeight: 200,
-            clusterBalloonPagerSize: 5,
-            clusterBalloonItemContentLayout: clustererLayout
+            groupByCoordinates: false
         });
         
         map.geoObjects.add(clusterer);
@@ -36,6 +26,8 @@ function mapInit() {
             var coords = e.get('coords');
             var geoCoords = ymaps.geocode(coords);
             var position = e.get('position');
+            // var comment = document.querySelector('.comment');
+            // comment.setContent(e.get('target').properties.get('balloonContent'));
 
             geoCoords.then(res => {
                 var obj = {};
@@ -50,10 +42,12 @@ function mapInit() {
 }
 
 function openPopup (obj, map, position, clusterer) {
+    modal.style.display = 'block';
     modal.innerHTML = render();
     let closeModal = document.querySelector('.close');
-    const header = document.querySelector('.modal_header');
+    const header = document.querySelector('.modal__header');
     header.innerHTML = obj.address;
+    // comment.innerHTML = render2(obj.comments);
     // function applyElementOffset() {
     //     modal.css({
     //         left: -(modal.offsetWidth / 2),
@@ -61,10 +55,7 @@ function openPopup (obj, map, position, clusterer) {
     //     });
     // }
     // модалку так позиционировать по клику или я что-то путаю?
-    типма.жю
-    document.addEventListener('click', function (e) {
-        // applyElementOffset();
-        modal.style.display = 'flex';
+    document.addEventListener('click', e => {
         if(e.target === closeModal) {
             modal.style.display = 'none';
         }
@@ -73,7 +64,6 @@ function openPopup (obj, map, position, clusterer) {
 }
 
 function createComment(obj, map, position, clusterer) {
-    const comment = document.querySelector('.comment');
     const button = document.querySelector('.button');
     const name = document.querySelector('#name');
     const point = document.querySelector('#point');
@@ -84,6 +74,7 @@ function createComment(obj, map, position, clusterer) {
             e.preventDefault();
             alert('Незаполненное поле формы');
         } else {
+            // modal.style.display = 'none';
             let sms = {};
             sms.time = date;
             sms.name = name.value;
@@ -99,18 +90,16 @@ function createComment(obj, map, position, clusterer) {
 }
 
 function createPlacemark(obj, map, position, clusterer, coords) {
+
     let placemark = new ymaps.Placemark(obj.coords, {
-        balloonContentHeader: obj.comments.sms.point,
-        balloonContenBody: obj.comments.sms.name,
-        balloonContenFooter: obj.comments.sms.time
+        balloonContentHeader: `<h2>${obj.comments.sms.point}</h2>`,
+        balloonContentBody: `<h3>${obj.address}</h3>${obj.comments.sms.message}`,
+        balloonContentFooter: obj.comments.sms.time
     }, {
-        preset: 'islands#redIcon'
+        preset: 'islands#redDotIconWithCaption'
     });
 
     clusterer.add(placemark);
-    clusterer.events.add('click', (e) => {
-        modal.style.display = 'none';
-    })
 }
 
 export {
