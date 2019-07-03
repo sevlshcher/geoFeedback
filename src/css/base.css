@@ -2,7 +2,6 @@
     width: 380px;
     height: 526px;
     display: block;
-    top: 25px;
     position: absolute;
     border-radius: 7 px;
     display: none;
@@ -64,7 +63,7 @@
     padding-right: 5%;
 }
 
-.form__title{
+.comment{
     color: #ff8663;
     font-size: 20px;
     margin-bottom: 15px;

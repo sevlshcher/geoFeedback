@@ -44,17 +44,17 @@ function mapInit() {
 function openPopup (obj, map, position, clusterer) {
     modal.style.display = 'block';
     modal.innerHTML = render();
+    if (window.innerWidth - position[0] < modal.offsetWidth){
+        modal.style.left = `${position[0] - modal.offsetWidth}px`
+    } else {modal.style.left = `${position[0]}px`};
+    if (window.innerHeight - position[1] < modal.offsetHeight){
+        modal.style.top = `${position[1] - modal.offsetHeight}px`
+    } else {modal.style.top = `${position[1]}px`};
+    let feedback = document.querySelector('.feedbacks');
+    feedback.innerHTML = 'Отзывов нет';
     let closeModal = document.querySelector('.close');
     const header = document.querySelector('.modal__header');
     header.innerHTML = obj.address;
-    // comment.innerHTML = render2(obj.comments);
-    // function applyElementOffset() {
-    //     modal.css({
-    //         left: -(modal.offsetWidth / 2),
-    //         top: -(modal.offsetHeight + modal.find('.arrow').offsetHeight)
-    //     });
-    // }
-    // модалку так позиционировать по клику или я что-то путаю?
     document.addEventListener('click', e => {
         if(e.target === closeModal) {
             modal.style.display = 'none';
@@ -100,6 +100,11 @@ function createPlacemark(obj, map, position, clusterer, coords) {
     });
 
     clusterer.add(placemark);
+    
+    placemark.events.add('click', e => {
+        feedback.innerHTML = `<p><b>${obj.comments.sms.name}</b> <span class="place">${obj.comments.sms.point}</span> ${obj.comments.sms.time}</br>${obj.comments.sms.message}</p>`;
+        openPopup(obj, map, position, clusterer, placemark.properties._data.balloonContent);
+    })
 }
 
 export {
