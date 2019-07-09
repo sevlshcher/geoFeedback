@@ -1,8 +1,8 @@
 import render from "../templates/modal.hbs"
-import render2 from "../templates/feedbacks.hbs"
 import {getData} from './data'
 
-var modal = document.querySelector('.modal');
+var modal = document.querySelector('.modal'),
+    placemarks = [];
 
 function mapInit() {
   
@@ -23,11 +23,10 @@ function mapInit() {
         map.geoObjects.add(clusterer);
 
         map.events.add('click', (e) => {
-            var coords = e.get('coords');
-            var geoCoords = ymaps.geocode(coords);
-            var position = e.get('position');
-            // var comment = document.querySelector('.comment');
-            // comment.setContent(e.get('target').properties.get('balloonContent'));
+            var coords = e.get('coords'),
+                geoCoords = ymaps.geocode(coords),
+                position = e.get('position');
+            let content = 'Отзывов нет';
 
             geoCoords.then(res => {
                 var obj = {};
@@ -35,13 +34,13 @@ function mapInit() {
                 obj.address = res.geoObjects.get(0).properties.get('text');
                 obj.comments = {};
 
-                openPopup (obj, map, position, clusterer);
+                openPopup (obj, map, position, clusterer, content);
             });
         });
     });
 }
 
-function openPopup (obj, map, position, clusterer) {
+function openPopup (obj, map, position, clusterer, content) {
     modal.style.display = 'block';
     modal.innerHTML = render();
     if (window.innerWidth - position[0] < modal.offsetWidth){
@@ -50,9 +49,14 @@ function openPopup (obj, map, position, clusterer) {
     if (window.innerHeight - position[1] < modal.offsetHeight){
         modal.style.top = `${position[1] - modal.offsetHeight}px`
     } else {modal.style.top = `${position[1]}px`};
-    let feedback = document.querySelector('.feedbacks');
-    feedback.innerHTML = 'Отзывов нет';
+
+    var feedback = document.querySelector('.feedbacks');
+    var fb = document.createElement('li');
+    fb.innerHTML = content;
+    feedback.appendChild(fb);
+
     let closeModal = document.querySelector('.close');
+    
     const header = document.querySelector('.modal__header');
     header.innerHTML = obj.address;
     document.addEventListener('click', e => {
@@ -74,13 +78,12 @@ function createComment(obj, map, position, clusterer) {
             e.preventDefault();
             alert('Незаполненное поле формы');
         } else {
-            // modal.style.display = 'none';
             let sms = {};
-            sms.time = date;
-            sms.name = name.value;
-            sms.point = point.value;
-            sms.message = message.value;
-            obj.comments.sms = sms;
+            sms.d = date;
+            sms.n = name.value;
+            sms.p = point.value;
+            sms.m = message.value;
+            obj.comments = sms;
             name.value = '';
             point.value = '';
             message.value = '';
@@ -89,22 +92,24 @@ function createComment(obj, map, position, clusterer) {
     });
 }
 
-function createPlacemark(obj, map, position, clusterer, coords) {
+function createPlacemark(obj, map, position, clusterer) {
 
     let placemark = new ymaps.Placemark(obj.coords, {
-        balloonContentHeader: `<h2>${obj.comments.sms.point}</h2>`,
-        balloonContentBody: `<h3>${obj.address}</h3>${obj.comments.sms.message}`,
-        balloonContentFooter: obj.comments.sms.time
+        balloonContentHeader: `<h2>${obj.comments.p}</h2>`,
+        balloonContentBody: `<h3>${obj.address}</h3>${obj.comments.m}`,
+        balloonContentFooter: obj.comments.d,
+        hintContent: obj.comments
     }, {
-        preset: 'islands#redDotIconWithCaption'
+        preset: 'islands#redDotIconWithCaption',
+        hasBalloon: false
     });
-
-    clusterer.add(placemark);
     
-    placemark.events.add('click', e => {
-        feedback.innerHTML = `<p><b>${obj.comments.sms.name}</b> <span class="place">${obj.comments.sms.point}</span> ${obj.comments.sms.time}</br>${obj.comments.sms.message}</p>`;
-        openPopup(obj, map, position, clusterer, placemark.properties._data.balloonContent);
-    })
+    clusterer.add(placemark);
+    let content = placemark.properties._data.hintContent;
+
+    placemark.events.add('click', () => {
+        openPopup(obj, map, position, clusterer, `${content.n} ${content.p} ${content.d}<br>${content.m}`);
+    });
 }
 
 export {
