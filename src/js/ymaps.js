@@ -1,8 +1,11 @@
 import render from "../templates/modal.hbs"
+import render2 from "../templates/feedback.hbs"
 import {getData} from './data'
 
-var modal = document.querySelector('.modal'),
-    placemarks = [];
+var modal = document.querySelector('.modal');
+// document.addEventListener('click', e => {
+//     console.log(e.target)
+// })
 
 function mapInit() {
   
@@ -13,10 +16,16 @@ function mapInit() {
             controls: ['zoomControl']
         }, {});
 
+        var customItemContentLayout = ymaps.templateLayoutFactory.createClass(
+            '<h2 class=ballon_header>{{ properties.balloonContentHeader }}</h2>' +
+            '<div class=ballon_body><a href="#" class="link">{{ properties.balloonContentBody[0] | raw}}</a></br>{{ properties.balloonContentBody[1] | raw}}</div>' +
+            '<div class=ballon_footer>{{ properties.balloonContentFooter | raw}}</div>')
+
         var clusterer = new ymaps.Clusterer({
             clusterDisableClickZoom: true,
             openBalloonOnClick: true,
             clusterBalloonContentLayout: 'cluster#balloonCarousel',
+            clusterBalloonItemContentLayout: customItemContentLayout,
             groupByCoordinates: false
         });
         
@@ -32,7 +41,9 @@ function mapInit() {
                 var obj = {};
                 obj.coords = coords;
                 obj.address = res.geoObjects.get(0).properties.get('text');
-                obj.comments = {};
+                obj.comments = {
+                    list : []
+                };
 
                 openPopup (obj, map, position, clusterer, content);
             });
@@ -43,17 +54,17 @@ function mapInit() {
 function openPopup (obj, map, position, clusterer, content) {
     modal.style.display = 'block';
     modal.innerHTML = render();
+
     if (window.innerWidth - position[0] < modal.offsetWidth){
         modal.style.left = `${position[0] - modal.offsetWidth}px`
     } else {modal.style.left = `${position[0]}px`};
+    
     if (window.innerHeight - position[1] < modal.offsetHeight){
-        modal.style.top = `${position[1] - modal.offsetHeight}px`
+        modal.style.top = `${position[1] - modal.offsetHeight + 20}px`
     } else {modal.style.top = `${position[1]}px`};
 
-    var feedback = document.querySelector('.feedbacks');
-    var fb = document.createElement('li');
-    fb.innerHTML = content;
-    feedback.appendChild(fb);
+    const feedbacks = document.querySelector('.feedbacks');
+    feedbacks.innerHTML = render2(obj.comments);
 
     let closeModal = document.querySelector('.close');
     
@@ -64,51 +75,63 @@ function openPopup (obj, map, position, clusterer, content) {
             modal.style.display = 'none';
         }
     });
-    createComment(obj, map, position, clusterer);
+    createComment(obj, map, position, clusterer, feedbacks);
 }
 
-function createComment(obj, map, position, clusterer) {
+function createComment(obj, map, position, clusterer,feedbacks) {
     const button = document.querySelector('.button');
     const name = document.querySelector('#name');
     const point = document.querySelector('#point');
-    const message = document.querySelector('#message');
+    const msg = document.querySelector('#message');
     const date = getData();
     button.addEventListener('click', (e) => {
-        if (name.value === '' || point.value === '' || message.value === '') {
-            e.preventDefault();
+        e.preventDefault();
+        const emptiFields = !(name.value && point.value && message.value);
+        if (emptiFields) {
             alert('Незаполненное поле формы');
-        } else {
-            let sms = {};
-            sms.d = date;
-            sms.n = name.value;
-            sms.p = point.value;
-            sms.m = message.value;
-            obj.comments = sms;
-            name.value = '';
-            point.value = '';
-            message.value = '';
-            createPlacemark(obj, map, position, clusterer);
+            return;
         }
+        let sms = {};
+        sms.date = date;
+        sms.name = name.value;
+        sms.point = point.value;
+        sms.msg = msg.value;
+        obj.comments.list.push(sms);
+        feedbacks.innerHTML = render2(obj.comments);
+
+        name.value = '';
+        point.value = '';
+        message.value = '';
+        createPlacemark(obj, map, position, clusterer, feedbacks);
     });
 }
 
-function createPlacemark(obj, map, position, clusterer) {
+function createPlacemark(obj, map, position, clusterer,feedbacks) {
 
     let placemark = new ymaps.Placemark(obj.coords, {
-        balloonContentHeader: `<h2>${obj.comments.p}</h2>`,
-        balloonContentBody: `<h3>${obj.address}</h3>${obj.comments.m}`,
-        balloonContentFooter: obj.comments.d,
-        hintContent: obj.comments
+        balloonContentHeader: obj.comments.list[obj.comments.list.length-1].point,
+        balloonContentBody: [obj.address, obj.comments.list[obj.comments.list.length-1].msg],
+        balloonContentFooter: obj.comments.list[obj.comments.list.length-1].date,
+        hintContent: obj
     }, {
-        preset: 'islands#redDotIconWithCaption',
+        preset: 'islands#redIcon',
         hasBalloon: false
     });
     
+    map.geoObjects.add(placemark);
     clusterer.add(placemark);
-    let content = placemark.properties._data.hintContent;
+
+    document.addEventListener('click', e => {
+        if (e.target.className === 'link') {
+            let addressInLink = e.target.innerHTML;
+            if (addressInLink === placemark.properties._data.hintContent.address) {
+                openPopup(placemark.properties._data.hintContent, map, position, feedbacks);
+            }
+        }
+    });
 
     placemark.events.add('click', () => {
-        openPopup(obj, map, position, clusterer, `${content.n} ${content.p} ${content.d}<br>${content.m}`);
+        openPopup(obj, map, position, clusterer, feedbacks);
     });
 }
 
